@@ -1,7 +1,8 @@
 # xtenso
 
-Run with 
+This is **xtenso**, a numeral translator.
 
-\code
-docker build --rm=true -t app .; docker run -p 5000:5000 --rm -ti app sh
-\endcode
+
+```bash
+docker build --rm=true -t xtenso .; docker run -p 5000:5000 --rm -ti xtenso pytest -v
+```
