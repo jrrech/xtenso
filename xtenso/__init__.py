@@ -1,6 +1,8 @@
 from flask import Flask
 import os
 
+
+
 def create_app(test_config=None):
     app = Flask(__name__)
 
@@ -21,5 +23,11 @@ def create_app(test_config=None):
     @app.route('/')
     def hello():
         return 'Hello, World!'
+
+    # apply the blueprints to the app
+    from xtenso import xlate
+
+    app.register_blueprint(xlate.bp)
+    app.config['JSON_AS_ASCII'] = False
 
     return app
