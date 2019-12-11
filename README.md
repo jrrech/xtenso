@@ -1,6 +1,8 @@
 # xtenso
 
-This is **xtenso**, a numeral translator.
+This is **xtenso**, a tool that translates an integer given as a numeral to its spelled-out form. It
+takes an integer from -99999 to 99999 as argument of HTTP GET requests directly in the URI. The
+result is given as the value of key `extenso` in a JSON response.
 
 In order to run it you must first build the [Docker](https://www.docker.com) container. On a Linux machine:
 

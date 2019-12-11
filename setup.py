@@ -13,7 +13,7 @@ setup(
     license="BSD",
     maintainer="Jonatas Rech",
     maintainer_email="jonatas.rech@gmail.com",
-    description="Translates an integer given in numerals to its spelled-out form.",
+    description="Translates an integer given as a numeral to its spelled-out form.",
     long_description=readme,
     packages=find_packages(),
     include_package_data=True,
