@@ -1,6 +1,20 @@
-from flask import Blueprint
+from flask import abort, Blueprint
+
+special_cases = {
+    'dez e um' : 'onze',
+    'dez e dois' : 'doze',
+    'dez e três' : 'treze',
+    'dez e quatro' : 'quatorze',
+    'dez e cinco' : 'quinze',
+    'dez e seis' : 'dezesseis',
+    'dez e sete' : 'dezessete',
+    'dez e oito' : 'dezoito',
+    'dez e nove' : 'dezenove',
+    'cem e' : 'cento e'
+}
 
 units = {
+    '0' : 'zero',
     '1' : 'um',
     '2' : 'dois',
     '3' : 'três',
@@ -13,6 +27,7 @@ units = {
 }
 
 tenths = {
+    '0' : 'zero',
     '1' : 'dez',
     '2' : 'vinte',
     '3' : 'trinta',
@@ -25,6 +40,7 @@ tenths = {
 }
 
 hundreds = {
+    '0' : 'zero',
     '1' : 'cem',
     '2' : 'duzentos',
     '3' : 'trezentos',
@@ -36,29 +52,57 @@ hundreds = {
     '9' : 'novecentos'
 }
 
-xlate_map = [ units, tenths, hundreds ]
-
-
 bp = Blueprint("xlate", __name__, url_prefix="/")
 
-@bp.route('/<string:num>', methods=(["GET"]))
-def translate(num):
-    chars = reversed(list(num))
-
-    response = ''
-    idx = 0
-    for c in chars:
-        pos = idx % 3
-        suffix = response
-        if suffix != '':
-            suffix = ' e ' + suffix
-            if idx == 3:
-                suffix = ' mil' + suffix
-
-        if c != '-':
-            response = xlate_map[pos][c] + suffix
+def add_mil(buf):
+    # Add 'mil' specifier avoiding starting with 'um mil e' 
+    if len(buf) > 3:
+        i = len(buf) - 4
+        if buf[i] == 'um' and len(buf) == 4:
+            buf[i] = 'mil'
         else:
-            response = 'menos ' + suffix
-        idx += 1
+            buf[i] += ' mil'
+    return buf
+
+@bp.route('/<string:arg>', methods=(["GET"]))
+def translate(arg):
+    # Handle the '-' prefix now and save it for later.
+    prefix = ''
+    if arg[0] == '-':
+        prefix = 'menos '
+        arg = arg[1:]
+
+    # Anything bigger than 5 digits is out of scope.
+    if len(arg) > 5:
+        abort(404)
+
+    try:
+        # This conversion removes extra zeros to the left
+        # and rules out any non-int parameters.
+        int_num = int(''.join(arg))
+    except ValueError:
+        abort(405)
+
+    # This exceptional case is best handled early on.
+    if int_num == 0:
+        return { 'extenso' : 'zero' }
+
+    # The lines above do the bulk of the conversion into a list.
+    buf = []
+    xlate_map = [ units, tenths, hundreds ]
+    [buf.insert(0, xlate_map[i % 3][c]) for (i,c) in enumerate(reversed(str(int_num)))]
+
+    # Add the 'mil' specifier at the correct position.
+    buf = add_mil(buf)
+
+    # Join everything into the response string.
+    response = prefix + ' e '.join(buf)
+
+    # The statement below filters ' e zero' occurrences out of the string.
+    response = response.replace(' e zero', '')
+
+    # Some cases require special attention, handle them now.
+    for key, val in special_cases.items():
+        response = response.replace(key, val)
 
     return { 'extenso' : response }
