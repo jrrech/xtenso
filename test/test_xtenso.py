@@ -19,28 +19,85 @@ def test_negative(client):
 
 def test_out_of_bounds_param(client):
     rv = client.get('/100000')
-    assert rv.status_code == 404
+    assert rv.status_code == 400
 
-    rv = client.get('/-90000')
+    rv = client.get('/-100000')
+    assert rv.status_code == 400
+
+    rv = client.get('/99999')
     assert rv.status_code == 200
-    assert b'menos noventa mil' in rv.data
+    assert b'noventa e nove mil e novecentos e noventa e nove' in rv.data
+
+    rv = client.get('/-99999')
+    assert rv.status_code == 200
+    assert b'menos noventa e nove mil e novecentos e noventa e nove' in rv.data
+
+def test_cojunction(client):
+    rv = client.get('/9')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 1
+
+    rv = client.get('/99')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 2
+
+    rv = client.get('/999')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 3
+
+    rv = client.get('/9999')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 4
+
+    rv = client.get('/99999')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 5
+
+    rv = client.get('/10')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 1
+
+    rv = client.get('/100')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 1
+
+    rv = client.get('/1000')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 1
+
+    rv = client.get('/10000')
+    assert rv.status_code == 200
+    assert len(str(rv.data).split(' e ')) == 1
 
 def test_bad_param(client):
     rv = client.get('/teste')
-    assert rv.status_code == 405
+    assert rv.status_code == 400
 
     rv = client.get('/10,2')
-    assert rv.status_code == 405
+    assert rv.status_code == 400
+
+def test_zero(client):
+    rv = client.get('/0')
+    assert rv.status_code == 200
+    assert b'zero' in rv.data
 
 def test_exceeding_zeros(client):
     rv = client.get('/00001')
     assert rv.status_code == 200
     assert b'um' in rv.data
 
-def test_zeros_in_between(client):
-    rv = client.get('/-50013')
+    rv = client.get('/0000000000000000000000000000013')
     assert rv.status_code == 200
-    assert b'menos cinquenta mil e treze' in rv.data
+    assert b'treze' in rv.data
+
+    rv = client.get('/-000000000000000000000000099998')
+    assert rv.status_code == 200
+    assert b'menos noventa e nove mil e novecentos e noventa e oito' in rv.data
+
+def test_zeros_in_between(client):
+    rv = client.get('/-50004')
+    assert rv.status_code == 200
+    assert b'menos cinquenta mil e quatro' in rv.data
 
 def test_cem_cento(client):
     rv = client.get('/23100')

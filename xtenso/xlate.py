@@ -66,31 +66,31 @@ def add_mil(buf):
 
 @bp.route('/<string:arg>', methods=(["GET"]))
 def translate(arg):
-    # Handle the '-' prefix now and save it for later.
-    prefix = ''
-    if arg[0] == '-':
-        prefix = 'menos '
-        arg = arg[1:]
-
-    # Anything bigger than 5 digits is out of scope.
-    if len(arg) > 5:
-        abort(404)
-
     try:
         # This conversion removes extra zeros to the left
         # and rules out any non-int parameters.
-        int_num = int(''.join(arg))
+        int_arg = int(''.join(arg))
     except ValueError:
-        abort(405)
+        abort(400)
+
+    # Handle the '-' prefix now and save it for later.
+    prefix = ''
+    if int_arg < 0:
+        prefix = 'menos '
+        int_arg = abs(int_arg)
+
+    # Check for parameters out of range
+    if int_arg > 99999:
+        abort(400)
 
     # This exceptional case is best handled early on.
-    if int_num == 0:
+    if int_arg == 0:
         return { 'extenso' : 'zero' }
 
     # The lines above do the bulk of the conversion into a list.
     buf = []
     xlate_map = [ units, tenths, hundreds ]
-    [buf.insert(0, xlate_map[i % 3][c]) for (i,c) in enumerate(reversed(str(int_num)))]
+    [buf.insert(0, xlate_map[i % 3][c]) for (i,c) in enumerate(reversed(str(int_arg)))]
 
     # Add the 'mil' specifier at the correct position.
     buf = add_mil(buf)
