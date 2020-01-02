@@ -1,6 +1,7 @@
 from flask import abort, Blueprint
 
 special_cases = {
+    ' e zero': '',
     'dez e um': 'onze',
     'dez e dois': 'doze',
     'dez e três': 'treze',
@@ -92,17 +93,15 @@ def translate(arg):
     # The lines above do the bulk of the conversion into a list.
     buf = []
     xlate_map = [units, tenths, hundreds]
-    [buf.insert(0, xlate_map[i % 3][c])
-     for (i, c) in enumerate(reversed(str(int_arg)))]
+
+    for (i, c) in enumerate(reversed(str(int_arg))):
+        buf.insert(0, xlate_map[i % 3][c])
 
     # Add the 'mil' specifier at the correct position.
     buf = add_mil(buf)
 
     # Join everything into the response string.
     response = prefix + ' e '.join(buf)
-
-    # The statement below filters ' e zero' occurrences out of the string.
-    response = response.replace(' e zero', '')
 
     # Some cases require special attention, handle them now.
     for key, val in special_cases.items():
